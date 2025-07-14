@@ -1,5 +1,5 @@
 # image_analyzer.py
-from vision.llm_vision_model import VisionModel
+from llm.llm_vision_model import VisionModel
 
 class ImageAnalyzer:
     @staticmethod
