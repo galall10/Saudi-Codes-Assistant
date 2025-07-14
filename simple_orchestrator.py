@@ -1,18 +1,13 @@
 from typing import Dict, List, Any
-from langchain_core.runnables import RunnableParallel, RunnableSequence, RunnableLambda
 from services.handler_factory import HandlerFactory
 import logging
 
-class ComplianceOrchestrator:
+class SimpleComplianceOrchestrator:
     def __init__(self, category_map: Dict[str, List[str]]):
-        """
-        category_map: { "electricity": ["image1.jpg", "image2.jpg"], ... }
-        """
         self.category_map = category_map
         self.logger = logging.getLogger(__name__)
 
     def _safe_validate_image(self, handler, image_path: str) -> Dict[str, Any]:
-        """Safely validate image with error handling"""
         try:
             return handler.validate_image(image_path)
         except Exception as e:
@@ -23,7 +18,6 @@ class ComplianceOrchestrator:
             }
 
     def _safe_analyze_image(self, handler, image_path: str, validation_result: Dict) -> Dict[str, Any]:
-        """Safely analyze image with error handling"""
         if not validation_result.get("is_valid", False):
             return {
                 "skipped": True,
@@ -40,7 +34,6 @@ class ComplianceOrchestrator:
             }
 
     def _safe_get_compliance(self, handler, analysis_result: Dict) -> Dict[str, Any]:
-        """Safely get compliance analysis with error handling"""
         if analysis_result.get("skipped", False):
             return analysis_result
 
@@ -60,39 +53,29 @@ class ComplianceOrchestrator:
                 "error": f"خطأ في تحليل المطابقة: {str(e)}"
             }
 
-    def build_image_chain(self, handler, image_path: str) -> RunnableSequence:
-        """Build processing chain for a single image"""
-        return RunnableSequence([
-            RunnableLambda(lambda _: self._safe_validate_image(handler, image_path)),
-            RunnableLambda(lambda result: self._safe_analyze_image(handler, image_path, result)),
-            RunnableLambda(lambda analysis: self._safe_get_compliance(handler, analysis))
-        ])
-
-    def build_category_chain(self, category: str, image_paths: List[str]) -> RunnableParallel:
-        try:
-            handler = HandlerFactory.get_handler(category)
-            return RunnableParallel({
-                image_path: self.build_image_chain(handler, image_path)
-                for image_path in image_paths
-            })
-        except Exception as e:
-            self.logger.error(f"Error creating handler for category {category}: {str(e)}")
-            error_msg = f"خطأ في إنشاء معالج الفئة {category}: {str(e)}"
-            return RunnableParallel({
-                image_path: RunnableLambda(lambda _: {
-                    "skipped": True,
-                    "reason": error_msg
-                })
-                for image_path in image_paths
-            })
-
     def run(self) -> Dict[str, Any]:
-        """Run the compliance orchestrator"""
+        """Runs compliance checks serially without parallel processing"""
         results = {}
         try:
-            for category, paths in self.category_map.items():
-                category_chain = self.build_category_chain(category, paths)
-                results[category] = category_chain.invoke({})
+            for category, image_paths in self.category_map.items():
+                try:
+                    handler = HandlerFactory.get_handler(category)
+                except Exception as e:
+                    results[category] = {
+                        path: {
+                            "skipped": True,
+                            "reason": f"فشل في إنشاء المعالج: {str(e)}"
+                        } for path in image_paths
+                    }
+                    continue
+
+                results[category] = {}
+                for image_path in image_paths:
+                    validation = self._safe_validate_image(handler, image_path)
+                    analysis = self._safe_analyze_image(handler, image_path, validation)
+                    compliance = self._safe_get_compliance(handler, analysis)
+                    results[category][image_path] = compliance
+
             return results
 
         except Exception as e:
@@ -102,15 +85,8 @@ class ComplianceOrchestrator:
                 "categories": list(self.category_map.keys())
             }
 
-        except Exception as e:
-            self.logger.error(f"Error running orchestrator: {str(e)}")
-            return {
-                "error": f"خطأ في تشغيل النظام: {str(e)}",
-                "categories": list(self.category_map.keys())
-            }
-
     def get_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
-        """Get a summary of the orchestrator results"""
+        """Same as in original version"""
         summary = {
             "total_categories": len(self.category_map),
             "total_images": sum(len(paths) for paths in self.category_map.values()),
