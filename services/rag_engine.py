@@ -1,6 +1,6 @@
 # services/rag_engine.py
 import os
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from services.embedding_provider import EmbeddingProvider
 
 class RAGEngine:

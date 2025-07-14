@@ -1,4 +1,4 @@
-from vision.llm_vision import VisionModel
+from vision.llm_vision_model import VisionModel
 
 def validate_image(image_path: str, prompt: str, keywords: list) -> bool:
     description = VisionModel.describe(image_path, prompt)

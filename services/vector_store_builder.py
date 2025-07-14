@@ -1,7 +1,7 @@
 # services/vector_store_builder.py
 import os
-from langchain.vectorstores.chroma import Chroma
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from services.embedding_provider import EmbeddingProvider
 

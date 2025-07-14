@@ -1,5 +1,5 @@
 # services/embedding_provider.py
-from langchain.embeddings import SentenceTransformerEmbeddings
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 from config import Config
 
 class EmbeddingProvider:

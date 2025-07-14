@@ -6,12 +6,10 @@ from orchestrator.ComplianceOrchestrator import ComplianceOrchestrator
 from orchestrator.orchestrator import Orchestrator
 from config import Config
 from scripts.build_all_vector_stores import build_all_vector_stores
-from scripts.download_model import ensure_model_downloaded
 
 app = Flask(__name__)
 Config.create_dirs()  # Create folders on boot
 
-ensure_model_downloaded()
 build_all_vector_stores()
 
 @app.route("/analyze", methods=["POST"])
