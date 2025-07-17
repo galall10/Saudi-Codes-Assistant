@@ -1,8 +1,6 @@
-# handlers/plumbing_handler.py
 from services.rag_engine import RAGEngine
-from typing import  List
+from typing import List
 from handlers.base_handler import BaseHandler
-
 
 class PlumbingHandler(BaseHandler):
     def __init__(self):
@@ -14,38 +12,38 @@ class PlumbingHandler(BaseHandler):
     @property
     def validation_prompt(self) -> str:
         return """
-        أنت خبير في أنظمة السباكة. قم بتحليل هذه الصورة للتأكد من أنها تحتوي على:
-        - أنابيب المياه أو الصرف
-        - تركيبات صحية (حنفيات، مراحيض، مغاسل)
-        - صمامات أو وصلات
-        - أنظمة ضخ أو تصريف 
-        إذا كانت الصورة تحتوي على هذه العناصر بشكل أساسي، فهي مناسبة لفئة السباكة.
+        You are an expert in plumbing systems. Analyze this image to verify it contains:
+        - Water or drainage pipes
+        - Plumbing fixtures (faucets, toilets, sinks)
+        - Valves or connectors
+        - Pumping or drainage systems
+        If the image primarily contains these elements, it is suitable for the plumbing category.
         """
 
     @property
     def vision_analysis_prompt(self) -> str:
         return """
-        انت سباك خبير، اوصف كل ما له علاقه بالسباكه في هذه الصوره بشكل مفصل.
+        You are a professional plumber. Describe in detail everything related to plumbing that appears in this image.
         """
 
     @property
     def compliance_analysis_prompt(self) -> str:
         return """
-        أنت خبير في الكود السعودي للسباكة:
-        1. نوع التركيبات الصحية الموجودة
-        2. مدى مطابقتها للكود السعودي
-        3. المخالفات المحتملة
-        4. التوصيات للتحسين
-        ركز على:
-        - جودة التوصيلات
-        - المواد المستخدمة
-        - الميول والانحدارات
-        - متطلبات السلامة الصحية
+        You are an expert in the Saudi Plumbing Code:
+        1. Identify the types of plumbing fixtures present.
+        2. Assess their compliance with the Saudi code.
+        3. Highlight any potential violations.
+        4. Provide recommendations for improvement.
+        Focus on:
+        - Connection quality
+        - Materials used
+        - Slopes and gradients
+        - Sanitary safety requirements
         """
 
     @property
     def validation_keywords(self) -> List[str]:
         return [
-            "سباكة", "أنابيب", "مياه", "صرف", "حنفيات",
-            "مراحيض", "صمامات", "مضخات", "صحي"
+            "plumbing", "pipes", "water", "drainage", "faucets",
+            "toilets", "valves", "pumps", "sanitary"
         ]

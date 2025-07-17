@@ -1,4 +1,3 @@
-# handlers/base_handler.py
 from abc import ABC, abstractmethod
 from typing import Dict, List
 
@@ -53,12 +52,12 @@ class BaseHandler(ABC):
             )
             return {
                 "is_valid": is_valid,
-                "reason": "" if is_valid else f"الصورة غير مناسبة لفئة {self.category_name}"
+                "reason": "" if is_valid else f"The image is not suitable for the '{self.category_name}' category."
             }
         except Exception as e:
             return {
                 "is_valid": False,
-                "reason": f"خطأ في التحقق من الصورة: {str(e)}"
+                "reason": f"Image validation error: {str(e)}"
             }
 
     def analyze_image(self, image_path: str) -> Dict:

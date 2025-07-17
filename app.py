@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 
 from orchestrator import ComplianceOrchestrator
 from config import Config
+from scripts.build_all_vector_stores import build_all_vector_stores
 from simple_orchestrator import SimpleComplianceOrchestrator
 
 app = Flask(__name__)

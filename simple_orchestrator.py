@@ -14,14 +14,14 @@ class SimpleComplianceOrchestrator:
             self.logger.error(f"Error validating image {image_path}: {str(e)}")
             return {
                 "is_valid": False,
-                "reason": f"خطأ في التحقق من الصورة: {str(e)}"
+                "reason": f"Image validation error: {str(e)}"
             }
 
     def _safe_analyze_image(self, handler, image_path: str, validation_result: Dict) -> Dict[str, Any]:
         if not validation_result.get("is_valid", False):
             return {
                 "skipped": True,
-                "reason": validation_result.get("reason", "فشل التحقق من الصورة")
+                "reason": validation_result.get("reason", "Image validation failed")
             }
 
         try:
@@ -30,7 +30,7 @@ class SimpleComplianceOrchestrator:
             self.logger.error(f"Error analyzing image {image_path}: {str(e)}")
             return {
                 "skipped": True,
-                "reason": f"خطأ في تحليل الصورة: {str(e)}"
+                "reason": f"Image analysis error: {str(e)}"
             }
 
     def _safe_get_compliance(self, handler, analysis_result: Dict) -> Dict[str, Any]:
@@ -40,7 +40,7 @@ class SimpleComplianceOrchestrator:
         if "description" not in analysis_result:
             return {
                 "skipped": True,
-                "reason": "لم يتم العثور على وصف للصورة"
+                "reason": "No image description found"
             }
 
         try:
@@ -50,7 +50,7 @@ class SimpleComplianceOrchestrator:
             return {
                 "description": analysis_result.get("description", ""),
                 "code_matches": [],
-                "error": f"خطأ في تحليل المطابقة: {str(e)}"
+                "error": f"Compliance analysis error: {str(e)}"
             }
 
     def run(self) -> Dict[str, Any]:
@@ -64,7 +64,7 @@ class SimpleComplianceOrchestrator:
                     results[category] = {
                         path: {
                             "skipped": True,
-                            "reason": f"فشل في إنشاء المعالج: {str(e)}"
+                            "reason": f"Failed to create handler: {str(e)}"
                         } for path in image_paths
                     }
                     continue
@@ -81,12 +81,12 @@ class SimpleComplianceOrchestrator:
         except Exception as e:
             self.logger.error(f"Error running orchestrator: {str(e)}")
             return {
-                "error": f"خطأ في تشغيل النظام: {str(e)}",
+                "error": f"System execution error: {str(e)}",
                 "categories": list(self.category_map.keys())
             }
 
     def get_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
-        """Same as in original version"""
+        """Generate a summary from the compliance results"""
         summary = {
             "total_categories": len(self.category_map),
             "total_images": sum(len(paths) for paths in self.category_map.values()),
@@ -109,7 +109,8 @@ class SimpleComplianceOrchestrator:
 
             for image_path, image_result in category_results.items():
                 if image_result.get("skipped", False):
-                    if "تحقق" in image_result.get("reason", ""):
+                    reason = image_result.get("reason", "")
+                    if "validation" in reason or "suitable" in reason:
                         category_summary["failed_validation"] += 1
                         summary["validation_failures"] += 1
                     else:

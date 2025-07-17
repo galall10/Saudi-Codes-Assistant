@@ -1,7 +1,9 @@
 # utils/llm_models_utils.py
 import base64
+import logging
 import requests
 from config import Config
+
 
 def call_vision_model(image_path: str, prompt: str) -> str:
     key = Config.OPENROUTER_API_KEYS[0]
@@ -49,15 +51,41 @@ def call_vision_model(image_path: str, prompt: str) -> str:
 
 def call_text_model(description: str, prompt: str) -> str:
     key = Config.OPENROUTER_API_KEYS[0]
+    model = Config.TEXT_MODELS[0]
+
+    full_prompt = f"{prompt.strip()}\n\nDescription:\n{description.strip()}"
     payload = {
-        "model": Config.TEXT_MODELS[0],
+        "model": model,
         "messages": [
-            {"role": "user", "content": f"{prompt}\n\nالوصف:\n{description}"}
+            {"role": "user", "content": full_prompt}
         ],
         "max_tokens": Config.MAX_TOKENS_TEXT
     }
 
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions",
-                             headers={"Authorization": f"Bearer {key}"},
-                             json=payload)
-    return response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        logging.info("📤 Sending request to OpenRouter for text model...")
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers)
+
+        if not response.ok:
+            logging.error(f"❌ OpenRouter response error: {response.status_code} {response.text}")
+            return "⚠️ LLM analysis failed due to API error."
+
+        data = response.json()
+
+        # Check full structure
+        content = data.get("choices", [{}])[0].get("message", {}).get("content")
+        if content:
+            return content.strip()
+        else:
+            logging.warning("⚠️ No content returned from OpenRouter:")
+            logging.debug(data)
+            return "⚠️ No content returned from the LLM."
+
+    except Exception as e:
+        logging.error(f"❌ Exception in call_text_model: {str(e)}")
+        return "⚠️ LLM compliance analysis failed due to an exception."
