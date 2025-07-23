@@ -2,6 +2,7 @@ from typing import Dict, List, Any
 from services.handler_factory import HandlerFactory
 import logging
 
+
 class SimpleComplianceOrchestrator:
     def __init__(self, category_map: Dict[str, List[str]]):
         self.category_map = category_map
@@ -53,8 +54,98 @@ class SimpleComplianceOrchestrator:
                 "error": f"Compliance analysis error: {str(e)}"
             }
 
+    def run_with_tables(self) -> Dict[str, Any]:
+        """
+        Runs compliance checks and generates table JSON for each category
+
+        Returns:
+            Dictionary with compliance tables for each category
+        """
+        results = {
+            "compliance_tables": {},
+            "processing_summary": {},
+            "errors": []
+        }
+
+        try:
+            for category, image_paths in self.category_map.items():
+                self.logger.info(f"Processing category: {category}")
+
+                try:
+                    handler = HandlerFactory.get_handler(category)
+                except Exception as e:
+                    error_msg = f"Failed to create handler for {category}: {str(e)}"
+                    self.logger.error(error_msg)
+                    results["errors"].append(error_msg)
+                    results["compliance_tables"][category] = {
+                        "error": error_msg,
+                        "category": category
+                    }
+                    continue
+
+                # Process all images in the category
+                category_compliance_analyses = []
+                category_processing_summary = {
+                    "total_images": len(image_paths),
+                    "processed_successfully": 0,
+                    "validation_failures": 0,
+                    "processing_errors": 0,
+                    "image_details": {}
+                }
+
+                for image_path in image_paths:
+                    self.logger.info(f"Processing image: {image_path}")
+
+                    # Process individual image
+                    validation = self._safe_validate_image(handler, image_path)
+                    analysis = self._safe_analyze_image(handler, image_path, validation)
+                    compliance = self._safe_get_compliance(handler, analysis)
+
+                    # Track processing results
+                    category_processing_summary["image_details"][image_path] = {
+                        "validation_passed": validation.get("is_valid", False),
+                        "analysis_successful": not analysis.get("skipped", False),
+                        "compliance_successful": not compliance.get("skipped", False) and "error" not in compliance
+                    }
+
+                    if compliance.get("skipped", False):
+                        reason = compliance.get("reason", "")
+                        if "validation" in reason:
+                            category_processing_summary["validation_failures"] += 1
+                        else:
+                            category_processing_summary["processing_errors"] += 1
+                    elif "error" in compliance:
+                        category_processing_summary["processing_errors"] += 1
+                    else:
+                        category_processing_summary["processed_successfully"] += 1
+                        category_compliance_analyses.append(compliance)
+
+                # Generate compliance table for the category
+                try:
+                    compliance_table = handler.generate_compliance_table(category_compliance_analyses)
+                    results["compliance_tables"][category] = compliance_table
+                    self.logger.info(f"Successfully generated compliance table for {category}")
+                except Exception as e:
+                    error_msg = f"Error generating compliance table for {category}: {str(e)}"
+                    self.logger.error(error_msg)
+                    results["errors"].append(error_msg)
+                    results["compliance_tables"][category] = {
+                        "error": error_msg,
+                        "category": category
+                    }
+
+                results["processing_summary"][category] = category_processing_summary
+
+            return results
+
+        except Exception as e:
+            error_msg = f"Error running orchestrator: {str(e)}"
+            self.logger.error(error_msg)
+            results["errors"].append(error_msg)
+            return results
+
     def run(self) -> Dict[str, Any]:
-        """Runs compliance checks serially without parallel processing"""
+        """Original method - runs compliance checks without table generation"""
         results = {}
         try:
             for category, image_paths in self.category_map.items():

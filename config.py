@@ -28,7 +28,7 @@ class Config:
 
     # Token limits
     MAX_TOKENS_VISION = 3000
-    MAX_TOKENS_TEXT = 4000
+    MAX_TOKENS_TEXT = 10000
 
     @classmethod
     def create_dirs(cls):
