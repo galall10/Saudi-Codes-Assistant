@@ -39,7 +39,7 @@ SCA/
 ├── app.py                  # Main application entry point
 ├── config.py               # Configuration settings
 ├── orchestrator.py         # Core logic for query orchestration
-├── simple_orchestrator.py  # Simplified orchestrator (if applicable)
+├── simple_orchestrator.py  # Simplified orchestrator 
 ├── requirements.txt        # Python dependencies
 ├── test_RAG.py             # Tests for RAG functionality
 ├── .env                    # Environment variables (not committed)
