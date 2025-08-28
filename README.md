@@ -24,7 +24,7 @@ The SCA system is built with a modular and scalable architecture, primarily usin
 
 *   **Python:** The primary programming language for the entire system.
 *   **Langchain:** Used for building and managing the RAG pipeline, including `langchain-core` and `langchain-community`.
-*   **ChromaDB:** A vector database used for storing and retrieving document embeddings.
+*   **FAISS:** A vector database used for storing and retrieving document embeddings.
 *   **Sentence Transformers:** For generating embeddings from text.
 *   **Requests:** For making HTTP requests.
 *   **PyPDF:** For parsing PDF documents.
